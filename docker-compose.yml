@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Node.js application service
+  app:
+    build: .
+    container_name: email-service-app
+    ports:
+      - "3000:3000"           # Expose port 3000 for the app
+    environment:
+      - NODE_ENV=development  # Set environment as development
+      - PORT=3000             # Specify app port
+      - JWT_SECRET=your-jwt-secret-key
+      - REDIS_HOST=redis      # Link to Redis service
+      - ELASTICSEARCH_HOST=elasticsearch  # Link to Elasticsearch service
+    volumes:
+      - .:/usr/src/app        # Mount current directory to container
+    depends_on:
+      - redis
+      - elasticsearch
+    networks:
+      - email-service-network
+
+  # Redis service
+  redis:
+    image: "redis:latest"
+    container_name: email-service-redis
+    ports:
+      - "6379:6379"           # Expose Redis port
+    networks:
+      - email-service-network
+
+  # Elasticsearch service
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.10.0"
+    container_name: email-service-elasticsearch
+    environment:
+      - discovery.type=single-node  # Run as a single node cluster
+    ports:
+      - "9200:9200"           # Expose Elasticsearch port
+    networks:
+      - email-service-network
+
+networks:
+  email-service-network:
+    driver: bridge
